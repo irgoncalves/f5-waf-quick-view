@@ -152,30 +152,34 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("device", help='BIG-IP devices list separated by line')
+    parser.add_argument("device", help='a file containing list of BIG-IP devices separated by line, e.g. devices.txt')
     args = vars(parser.parse_args())
 
     device = args['device']
 
     username = input('Enter your username: ') 
-    password = getpass.getpass('Enter your password')
+    password = getpass.getpass('Enter your password:')
 
-    with open(device,'r') as a_file:
-        for line in a_file:
-            device = line.strip()
-            # TODO - test connectivity with each device and report on the ones failing 
-            url_base = 'https://%s/mgmt' % device
-            bigip = requests.session()
-            bigip.headers.update({'Content-Type': 'application/json'})
-            bigip.auth = (username, password)
-            bigip.verify = False
-            token = get_token(bigip, url_base, (username, password))
-            print(device)
-            if (not token):
-                print('Unable to obtain token for device ' + device)
-                continue 
-            if not check_active(device, token): 
-                print('Device ' + device + ' is not active, skipping it...')
-                continue
-            audit_asm_policies_high_level(device,token)
-    print('File saved: %s' % filename)
+    try:
+      with open(device,'r') as a_file:
+          for line in a_file:
+              device = line.strip()
+              # TODO - test connectivity with each device and report on the ones failing 
+              url_base = 'https://%s/mgmt' % device
+              bigip = requests.session()
+              bigip.headers.update({'Content-Type': 'application/json'})
+              bigip.auth = (username, password)
+              bigip.verify = False
+              token = get_token(bigip, url_base, (username, password))
+              print(device)
+              if (not token):
+                  print('Unable to obtain token for device ' + device)
+                  continue 
+              if not check_active(device, token): 
+                  print('Device ' + device + ' is not active, skipping it...')
+                  continue
+              audit_asm_policies_high_level(device,token)
+      print('File saved: %s' % filename)
+    except:
+      print('Error reading file %s' % device)
+
